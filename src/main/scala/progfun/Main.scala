@@ -16,7 +16,7 @@ object Main extends App {
   val buffer = Source.fromFile("test.txt")(Codec.UTF8)
   val lines = buffer.getLines().toList
   buffer.close()
-  
+
   // val res = for {
   //   d  <- Direction.parse(lines(0))
   //   p  <- Point.parse(lines(1))
@@ -24,7 +24,7 @@ object Main extends App {
   // } yield (d, p, is)
 
   val res = for {
-    limit <- Limit.parse(lines.headOption.getOrElse(""))
+    limit  <- Limit.parse(lines.headOption.getOrElse(""))
     mowers <- Mower.parseMany(lines.drop(1), limit)
   } yield (limit, mowers)
 
@@ -32,7 +32,9 @@ object Main extends App {
     case Failure(exception) => throw exception
     case Success((limit, mowers)) => {
       println(limit)
-      mowers.foreach(mower => println(s"${mower.toString()} | ${mower.run().toString()}"))
+      mowers.foreach(
+        mower => println(s"${mower.toString()} | ${mower.run().toString()}")
+      )
     }
   }
   ()
