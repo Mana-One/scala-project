@@ -20,21 +20,21 @@ object Limit {
   }
 }
 
-sealed abstract class Instruction2(value: Char) {
+sealed abstract class Instruction(value: Char) {
   override def toString(): String = value.toString()
 }
-object Instruction2 {
-  def parse(input: Char): Try[Instruction2] = input match {
-    case 'G' => Success(RotateLeft2)
-    case 'D' => Success(RotateRight2)
-    case 'A' => Success(Advance2)
+object Instruction {
+  def parse(input: Char): Try[Instruction] = input match {
+    case 'G' => Success(RotateLeft)
+    case 'D' => Success(RotateRight)
+    case 'A' => Success(Advance)
     case _   => Failure(new DonneesIncorectesException("Invalid instruction"))
   }
 
-  def parseMany(inputs: String): Try[List[Instruction2]] = {
+  def parseMany(inputs: String): Try[List[Instruction]] = {
     inputs.toList
       .map(input => parse(input))
-      .foldLeft[Try[List[Instruction2]]](Success(Nil)) { (acc, input) =>
+      .foldLeft[Try[List[Instruction]]](Success(Nil)) { (acc, input) =>
         (acc, input) match {
           case (Failure(e), _)            => Failure(e)
           case (_, Failure(e))            => Failure(e)
@@ -43,33 +43,33 @@ object Instruction2 {
       }
   }
 }
-object Advance2 extends Instruction2('A')
-object RotateLeft2 extends Instruction2('G')
-object RotateRight2 extends Instruction2('D')
+object Advance extends Instruction('A')
+object RotateLeft extends Instruction('G')
+object RotateRight extends Instruction('D')
 
-sealed abstract class Direction2(val value: String) {
+sealed abstract class Direction(val value: String) {
   override def toString(): String = value
 
-  def rotateToTheLeft(): Direction2 = this match {
+  def rotateToTheLeft(): Direction = this match {
     case North2 => West2
     case East2  => North2
     case West2  => South2
     case South2 => East2
   }
 
-  def rotateToTheRight(): Direction2 = this match {
+  def rotateToTheRight(): Direction = this match {
     case North2 => East2
     case East2  => South2
     case West2  => North2
     case South2 => West2
   }
 }
-object North2 extends Direction2("N")
-object East2 extends Direction2("E")
-object West2 extends Direction2("W")
-object South2 extends Direction2("S")
+object North2 extends Direction("N")
+object East2 extends Direction("E")
+object West2 extends Direction("W")
+object South2 extends Direction("S")
 
-final case class Coordinates(x: Int, y: Int, direction: Direction2) {
+final case class Coordinates(x: Int, y: Int, direction: Direction) {
   private def moveForward(edges: Tuple2[Int, Int]): Coordinates = this match {
     case Coordinates(x, y, North2) if (y + 1 <= edges._2) =>
       Coordinates(x, y + 1, North2)
@@ -83,14 +83,14 @@ final case class Coordinates(x: Int, y: Int, direction: Direction2) {
   }
 
   def followInstruction(
-      instruction: Instruction2,
+      instruction: Instruction,
       edges: Tuple2[Int, Int]
   ): Coordinates = (this, instruction) match {
-    case (Coordinates(x, y, d), RotateLeft2) =>
+    case (Coordinates(x, y, d), RotateLeft) =>
       Coordinates(x, y, d.rotateToTheLeft())
-    case (Coordinates(x, y, d), RotateRight2) =>
+    case (Coordinates(x, y, d), RotateRight) =>
       Coordinates(x, y, d.rotateToTheRight())
-    case (_, Advance2) => this.moveForward(edges)
+    case (_, Advance) => this.moveForward(edges)
   }
 }
 
@@ -102,7 +102,7 @@ object Coordinates {
         Failure(new DonneesIncorectesException("Invalid coordinate value"))
       )(Success.apply)
 
-  private def parseDirection(v: String): Try[Direction2] = v match {
+  private def parseDirection(v: String): Try[Direction] = v match {
     case "N" => Success(North2)
     case "E" => Success(East2)
     case "W" => Success(West2)
@@ -124,7 +124,7 @@ object Coordinates {
 
 final case class Mower(
     start: Coordinates,
-    instructions: List[Instruction2],
+    instructions: List[Instruction],
     worldEdges: Tuple2[Int, Int]
 ) {
   def run(): Coordinates =
@@ -142,7 +142,7 @@ object Mower {
   ): Try[Mower] =
     for {
       c <- Coordinates.parse(coordinates, edges)
-      i <- Instruction2.parseMany(instructions)
+      i <- Instruction.parseMany(instructions)
     } yield Mower(c, i, edges)
 
   def parseMany(
