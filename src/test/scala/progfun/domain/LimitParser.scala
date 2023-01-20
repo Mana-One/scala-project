@@ -30,7 +30,3 @@ class LimitParserSpec extends AnyFunSuite {
     assert(res3.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
   }
 }
-
-// class MowerSpec extends AnyFunSuite {
-//   test("")
-// }

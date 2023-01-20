@@ -10,38 +10,36 @@ object Advance extends Instruction
 object RotateLeft extends Instruction
 object RotateRight extends Instruction
 
-sealed abstract class Direction(val value: String) {
-  override def toString(): String = value
-
+sealed trait Direction {
   def rotateToTheLeft(): Direction = this match {
-    case North2 => West2
-    case East2  => North2
-    case West2  => South2
-    case South2 => East2
+    case North => West
+    case East  => North
+    case West  => South
+    case South => East
   }
 
   def rotateToTheRight(): Direction = this match {
-    case North2 => East2
-    case East2  => South2
-    case West2  => North2
-    case South2 => West2
+    case North => East
+    case East  => South
+    case West  => North
+    case South => West
   }
 }
-object North2 extends Direction("N")
-object East2 extends Direction("E")
-object West2 extends Direction("W")
-object South2 extends Direction("S")
+object North  extends Direction
+object East   extends Direction
+object West   extends Direction
+object South  extends Direction
 
 final case class Coordinates(x: Int, y: Int, direction: Direction) {
   private def moveForward(edges: Limit): Coordinates = this match {
-    case Coordinates(x, y, North2) if (y + 1 <= edges.y) =>
-      Coordinates(x, y + 1, North2)
-    case Coordinates(x, y, West2) if (0 <= x - 1) =>
-      Coordinates(x - 1, y, West2)
-    case Coordinates(x, y, East2) if (x + 1 <= edges.x) =>
-      Coordinates(x + 1, y, East2)
-    case Coordinates(x, y, South2) if (0 <= y - 1) =>
-      Coordinates(x, y - 1, South2)
+    case Coordinates(x, y, North) if (y + 1 <= edges.y) =>
+      Coordinates(x, y + 1, North)
+    case Coordinates(x, y, West) if (0 <= x - 1) =>
+      Coordinates(x - 1, y, West)
+    case Coordinates(x, y, East) if (x + 1 <= edges.x) =>
+      Coordinates(x + 1, y, East)
+    case Coordinates(x, y, South) if (0 <= y - 1) =>
+      Coordinates(x, y - 1, South)
     case _ => this
   }
 
@@ -65,21 +63,13 @@ object Coordinates {
         Failure(new DonneesIncorectesException("Invalid coordinate value"))
       )(Success.apply)
 
-  private def parseDirection(v: String): Try[Direction] = v match {
-    case "N" => Success(North2)
-    case "E" => Success(East2)
-    case "W" => Success(West2)
-    case "S" => Success(South2)
-    case _   => Failure(new DonneesIncorectesException("Invalid direction"))
-  }
-
   def parse(v: String, edges: Limit): Try[Coordinates] =
     v.split(" ").toList match {
       case x :: y :: d :: Nil =>
         for {
           cx <- parseInt(x, edges.x)
           cy <- parseInt(y, edges.y)
-          cd <- parseDirection(d)
+          cd <- DirectionParser.parse(d)
         } yield Coordinates(cx, cy, cd)
       case _ => Failure(new DonneesIncorectesException("Invalid coordinates"))
     }
