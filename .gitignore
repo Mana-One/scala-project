@@ -35,3 +35,4 @@ metals.sbt
 
 # APP
 test.txt
+out.*
