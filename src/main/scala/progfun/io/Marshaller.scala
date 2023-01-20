@@ -1,9 +1,10 @@
 package fr.esgi.al.progfun.io
 
 import fr.esgi.al.progfun.domain.{Coordinates, Mower}
+import fr.esgi.al.progfun.domain.Limit
 
 sealed trait Marshaller {
-	def write(filename: String, data: (Tuple2[Int, Int], List[Mower])): String
+	def write(filename: String, data: (Limit, List[Mower])): String
 }
 
 object CSVOutputMarshaller extends Marshaller {
@@ -11,7 +12,7 @@ object CSVOutputMarshaller extends Marshaller {
 		s"${coordinates.x.toString()};${coordinates.y.toString()};${coordinates.direction.toString()}"
 	}
 
-  override def write(filename: String, data: (Tuple2[Int, Int], List[Mower])): String = {
+  override def write(filename: String, data: (Limit, List[Mower])): String = {
 		data._2.zipWithIndex.map(m => {
 			val num = m._2 + 1
 			val start = m._1.start

@@ -2,23 +2,8 @@ package fr.esgi.al.progfun.domain
 
 import scala.util.{Failure, Success, Try}
 
-object Limit {
-  private def parseInt(v: String): Try[Int] =
-    v.toIntOption
-      .flatMap(x => if (x >= 0) Some(x) else None)
-      .fold[Try[Int]](
-        Failure(new DonneesIncorectesException("Invalid limit"))
-      )(Success.apply)
 
-  def parse(v: String): Try[Tuple2[Int, Int]] = v.split(" ").toList match {
-    case x :: y :: Nil =>
-      for {
-        cx <- parseInt(x)
-        cy <- parseInt(y)
-      } yield (cx, cy)
-    case _ => Failure(new DonneesIncorectesException("Invalid limits"))
-  }
-}
+final case class Limit(x: Int, y: Int)
 
 sealed abstract class Instruction(value: Char) {
   override def toString(): String = value.toString()
@@ -70,12 +55,12 @@ object West2 extends Direction("W")
 object South2 extends Direction("S")
 
 final case class Coordinates(x: Int, y: Int, direction: Direction) {
-  private def moveForward(edges: Tuple2[Int, Int]): Coordinates = this match {
-    case Coordinates(x, y, North2) if (y + 1 <= edges._2) =>
+  private def moveForward(edges: Limit): Coordinates = this match {
+    case Coordinates(x, y, North2) if (y + 1 <= edges.y) =>
       Coordinates(x, y + 1, North2)
     case Coordinates(x, y, West2) if (0 <= x - 1) =>
       Coordinates(x - 1, y, West2)
-    case Coordinates(x, y, East2) if (x + 1 <= edges._1) =>
+    case Coordinates(x, y, East2) if (x + 1 <= edges.x) =>
       Coordinates(x + 1, y, East2)
     case Coordinates(x, y, South2) if (0 <= y - 1) =>
       Coordinates(x, y - 1, South2)
@@ -84,7 +69,7 @@ final case class Coordinates(x: Int, y: Int, direction: Direction) {
 
   def followInstruction(
       instruction: Instruction,
-      edges: Tuple2[Int, Int]
+      edges: Limit
   ): Coordinates = (this, instruction) match {
     case (Coordinates(x, y, d), RotateLeft) =>
       Coordinates(x, y, d.rotateToTheLeft())
@@ -110,12 +95,12 @@ object Coordinates {
     case _   => Failure(new DonneesIncorectesException("Invalid direction"))
   }
 
-  def parse(v: String, edges: Tuple2[Int, Int]): Try[Coordinates] =
+  def parse(v: String, edges: Limit): Try[Coordinates] =
     v.split(" ").toList match {
       case x :: y :: d :: Nil =>
         for {
-          cx <- parseInt(x, edges._1)
-          cy <- parseInt(y, edges._2)
+          cx <- parseInt(x, edges.x)
+          cy <- parseInt(y, edges.y)
           cd <- parseDirection(d)
         } yield Coordinates(cx, cy, cd)
       case _ => Failure(new DonneesIncorectesException("Invalid coordinates"))
@@ -125,7 +110,7 @@ object Coordinates {
 final case class Mower(
     start: Coordinates,
     instructions: List[Instruction],
-    worldEdges: Tuple2[Int, Int]
+    worldEdges: Limit
 ) {
   def run(): Coordinates =
     instructions
@@ -138,7 +123,7 @@ object Mower {
   def parse(
       coordinates: String,
       instructions: String,
-      edges: Tuple2[Int, Int]
+      edges: Limit
   ): Try[Mower] =
     for {
       c <- Coordinates.parse(coordinates, edges)
@@ -147,7 +132,7 @@ object Mower {
 
   def parseMany(
       inputs: List[String],
-      edges: Tuple2[Int, Int]
+      edges: Limit
   ): Try[List[Mower]] = inputs match {
     case _ :: Nil =>
       Failure(new DonneesIncorectesException("Invalid mowers input"))
