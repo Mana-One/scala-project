@@ -5,32 +5,10 @@ import scala.util.{Failure, Success, Try}
 
 final case class Limit(x: Int, y: Int)
 
-sealed abstract class Instruction(value: Char) {
-  override def toString(): String = value.toString()
-}
-object Instruction {
-  def parse(input: Char): Try[Instruction] = input match {
-    case 'G' => Success(RotateLeft)
-    case 'D' => Success(RotateRight)
-    case 'A' => Success(Advance)
-    case _   => Failure(new DonneesIncorectesException("Invalid instruction"))
-  }
-
-  def parseMany(inputs: String): Try[List[Instruction]] = {
-    inputs.toList
-      .map(input => parse(input))
-      .foldLeft[Try[List[Instruction]]](Success(Nil)) { (acc, input) =>
-        (acc, input) match {
-          case (Failure(e), _)            => Failure(e)
-          case (_, Failure(e))            => Failure(e)
-          case (Success(arr), Success(i)) => Success(arr :+ i)
-        }
-      }
-  }
-}
-object Advance extends Instruction('A')
-object RotateLeft extends Instruction('G')
-object RotateRight extends Instruction('D')
+sealed trait Instruction
+object Advance extends Instruction
+object RotateLeft extends Instruction
+object RotateRight extends Instruction
 
 sealed abstract class Direction(val value: String) {
   override def toString(): String = value
@@ -127,7 +105,7 @@ object Mower {
   ): Try[Mower] =
     for {
       c <- Coordinates.parse(coordinates, edges)
-      i <- Instruction.parseMany(instructions)
+      i <- InstructionParser.parseMany(instructions)
     } yield Mower(c, i, edges)
 
   def parseMany(

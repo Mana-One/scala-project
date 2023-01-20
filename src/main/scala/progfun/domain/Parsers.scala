@@ -23,3 +23,24 @@ object LimitParser {
     case _ => Failure(new DonneesIncorectesException("Invalid limits"))
   }
 }
+
+object InstructionParser {
+  private def parse(input: Char): Try[Instruction] = input match {
+    case 'G' => Success(RotateLeft)
+    case 'D' => Success(RotateRight)
+    case 'A' => Success(Advance)
+    case _   => Failure(new DonneesIncorectesException("Invalid instruction"))
+  }
+
+  def parseMany(inputs: String): Try[List[Instruction]] = {
+    inputs.toList
+      .map(input => parse(input)) // List[Try[Instruction]]
+      .foldLeft[Try[List[Instruction]]](Success(Nil)) { (acc, input) =>
+        (acc, input) match {
+          case (Failure(e), _)            => Failure(e)
+          case (_, Failure(e))            => Failure(e)
+          case (Success(arr), Success(i)) => Success(arr :+ i)
+        }
+      }
+  }
+}
