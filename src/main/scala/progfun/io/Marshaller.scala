@@ -55,10 +55,15 @@ case class JsonArray(content: List[MyJson]) extends MyJson {
 		.map(c => c.toJson())
 		.mkString("[", ",", "]")
 }
-case class JsonObject(content: Map[String, MyJson]) extends MyJson {
-	def toJson(): String = content
-		.map { case (key, value) => s""""${key}": ${value.toJson()}""" }
-		.mkString("{", ",", "}")
+case class JsonObject(indent: Int, content: Map[String, MyJson]) extends MyJson {
+	def toJson(): String = {
+		val parentIndentation = List.fill(indent)('\t').mkString
+		val childIndentation 	= List.fill(indent + 1)('\t').mkString
+
+		content
+			.map { case (key, value) => s"""${childIndentation}"${key}": ${value.toJson()}""" }
+			.mkString("{\n", ",\n", s"\n${parentIndentation}}")
+	}
 }
 
 object JsonMarshaller extends Marshaller {
@@ -69,8 +74,8 @@ object JsonMarshaller extends Marshaller {
 		case South => JsonString("S")
 	}
 
-	private def coordinatesToJson(coordinates: Coordinates): MyJson = JsonObject(Map(
-		"point" -> JsonObject(Map(
+	private def coordinatesToJson(indent: Int, coordinates: Coordinates): MyJson = JsonObject(indent, Map(
+		"point" -> JsonObject(indent + 1, Map(
 			"x" -> JsonInt(coordinates.x),
 			"y" -> JsonInt(coordinates.y)
 		)),
@@ -83,19 +88,19 @@ object JsonMarshaller extends Marshaller {
 		case RotateRight => JsonString("D")
 	}
 
-	private def mowerToJson(mower: Mower): MyJson = JsonObject(Map(
-		"début" -> coordinatesToJson(mower.start),
+	private def mowerToJson(indent: Int, mower: Mower): MyJson = JsonObject(indent, Map(
+		"début" -> coordinatesToJson(indent + 1, mower.start),
 		"instructions" -> JsonArray(mower.instructions.map(instructionToJson)),
-		"fin" -> coordinatesToJson(mower.run())
+		"fin" -> coordinatesToJson(indent + 1, mower.run())
 	))
 
-	private def limitToJson(limit: Limit): MyJson = JsonObject(Map(
+	private def limitToJson(indent: Int, limit: Limit): MyJson = JsonObject(indent, Map(
 			"x" -> JsonInt(limit.x),
 			"y" -> JsonInt(limit.y)
 		))
 
-  override def write(limit: Limit, mowers: List[Mower]): String = JsonObject(Map(
-		"limite" -> limitToJson(limit),
-		"tondeuses" -> JsonArray(mowers.map(mowerToJson))
+  override def write(limit: Limit, mowers: List[Mower]): String = JsonObject(0, Map(
+		"limite" -> limitToJson(1, limit),
+		"tondeuses" -> JsonArray(mowers.map(mower => mowerToJson(1, mower)))
 	)).toJson()
 }
