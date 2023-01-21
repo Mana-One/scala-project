@@ -4,6 +4,7 @@ import fr.esgi.al.progfun.io.{InputReader, CSVOutputMarshaller}
 import scala.util.{Failure, Success}
 import java.io.{File, PrintWriter}
 
+
 @SuppressWarnings(Array("org.wartremover.warts.Throw"))
 object Main extends App {
   val res = InputReader

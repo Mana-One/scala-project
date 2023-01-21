@@ -73,3 +73,24 @@ object CoordinatesParser {
       case _ => Failure(new DonneesIncorectesException("Invalid coordinates"))
     }
 }
+
+object MowerParser {
+  private def parse(coordinates: String, instructions: String, limit: Limit): Try[Mower] = for {
+    c <- CoordinatesParser.parse(coordinates, limit)
+    i <- InstructionParser.parseMany(instructions)
+  } yield Mower(c, i, limit)
+
+  def parseMany(inputs: List[String], limit: Limit): Try[List[Mower]] = inputs match {
+    case _ :: Nil => 
+      Failure(new DonneesIncorectesException("Invalid mowers input"))
+
+    case coordinates :: instructions :: next =>
+      for {
+        mower <- parse(coordinates, instructions, limit)
+        rest  <- parseMany(next, limit)
+      } yield mower :: rest
+      
+    case Nil => 
+      Success(Nil)
+  }
+}

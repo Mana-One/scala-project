@@ -2,7 +2,7 @@ package fr.esgi.al.progfun.io
 
 import scala.io.{Codec, Source}
 import scala.util.Try
-import fr.esgi.al.progfun.domain.{Limit, LimitParser, Mower}
+import fr.esgi.al.progfun.domain.{Limit, LimitParser, Mower, MowerParser}
 
 object InputReader {
 	def parseTasks(filename: String): Try[(Limit, List[Mower])] = {
@@ -14,8 +14,8 @@ object InputReader {
 		}
 
 		for {
-				limit  <- LimitParser.parse(lines.headOption.getOrElse(""))
-				mowers <- Mower.parseMany(lines.drop(1), limit)
+			limit  <- LimitParser.parse(lines.headOption.getOrElse(""))
+			mowers <- MowerParser.parseMany(lines.drop(1), limit)
 		} yield (limit, mowers)
 	}
 }

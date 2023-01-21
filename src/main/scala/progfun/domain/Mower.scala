@@ -1,7 +1,5 @@
 package fr.esgi.al.progfun.domain
 
-import scala.util.{Failure, Success, Try}
-
 
 final case class Limit(x: Int, y: Int)
 
@@ -53,40 +51,8 @@ final case class Coordinates(x: Int, y: Int, direction: Direction) {
   }
 }
 
-final case class Mower(
-    start: Coordinates,
-    instructions: List[Instruction],
-    worldEdges: Limit
-) {
-  def run(): Coordinates =
-    instructions
-      .foldLeft(start) { (dest, instruction) =>
-        dest.applyInstruction(instruction, worldEdges)
-      }
-}
-
-object Mower {
-  def parse(
-      coordinates: String,
-      instructions: String,
-      edges: Limit
-  ): Try[Mower] =
-    for {
-      c <- CoordinatesParser.parse(coordinates, edges)
-      i <- InstructionParser.parseMany(instructions)
-    } yield Mower(c, i, edges)
-
-  def parseMany(
-      inputs: List[String],
-      edges: Limit
-  ): Try[List[Mower]] = inputs match {
-    case _ :: Nil =>
-      Failure(new DonneesIncorectesException("Invalid mowers input"))
-    case coordinates :: instructions :: next =>
-      for {
-        mower <- parse(coordinates, instructions, edges)
-        rest  <- parseMany(next, edges)
-      } yield mower :: rest
-    case Nil => Success(Nil)
+final case class Mower(start: Coordinates, instructions: List[Instruction], limit: Limit) {
+  def run(): Coordinates = instructions.foldLeft(start) { 
+    (dest, instruction) => dest.applyInstruction(instruction, limit)
   }
 }
