@@ -5,10 +5,12 @@ import scala.util.{Failure, Success, Try}
 
 final case class Limit(x: Int, y: Int)
 
+
 sealed trait Instruction
 object Advance extends Instruction
 object RotateLeft extends Instruction
 object RotateRight extends Instruction
+
 
 sealed trait Direction {
   def rotateToTheLeft(): Direction = this match {
@@ -30,6 +32,7 @@ object East   extends Direction
 object West   extends Direction
 object South  extends Direction
 
+
 final case class Coordinates(x: Int, y: Int, direction: Direction) {
   private def moveForward(edges: Limit): Coordinates = this match {
     case Coordinates(x, y, North) if (y + 1 <= edges.y) =>
@@ -43,36 +46,11 @@ final case class Coordinates(x: Int, y: Int, direction: Direction) {
     case _ => this
   }
 
-  def followInstruction(
-      instruction: Instruction,
-      edges: Limit
-  ): Coordinates = (this, instruction) match {
-    case (Coordinates(x, y, d), RotateLeft) =>
-      Coordinates(x, y, d.rotateToTheLeft())
-    case (Coordinates(x, y, d), RotateRight) =>
-      Coordinates(x, y, d.rotateToTheRight())
-    case (_, Advance) => this.moveForward(edges)
+  def applyInstruction(instruction: Instruction, limit: Limit): Coordinates = (this, instruction) match {
+    case (Coordinates(x, y, d), RotateLeft)   => Coordinates(x, y, d.rotateToTheLeft())
+    case (Coordinates(x, y, d), RotateRight)  => Coordinates(x, y, d.rotateToTheRight())
+    case (_, Advance)                         => this.moveForward(limit)
   }
-}
-
-object Coordinates {
-  private def parseInt(v: String, limit: Int): Try[Int] =
-    v.toIntOption
-      .flatMap(x => if (0 <= x && x <= limit) Some(x) else None)
-      .fold[Try[Int]](
-        Failure(new DonneesIncorectesException("Invalid coordinate value"))
-      )(Success.apply)
-
-  def parse(v: String, edges: Limit): Try[Coordinates] =
-    v.split(" ").toList match {
-      case x :: y :: d :: Nil =>
-        for {
-          cx <- parseInt(x, edges.x)
-          cy <- parseInt(y, edges.y)
-          cd <- DirectionParser.parse(d)
-        } yield Coordinates(cx, cy, cd)
-      case _ => Failure(new DonneesIncorectesException("Invalid coordinates"))
-    }
 }
 
 final case class Mower(
@@ -83,7 +61,7 @@ final case class Mower(
   def run(): Coordinates =
     instructions
       .foldLeft(start) { (dest, instruction) =>
-        dest.followInstruction(instruction, worldEdges)
+        dest.applyInstruction(instruction, worldEdges)
       }
 }
 
@@ -94,7 +72,7 @@ object Mower {
       edges: Limit
   ): Try[Mower] =
     for {
-      c <- Coordinates.parse(coordinates, edges)
+      c <- CoordinatesParser.parse(coordinates, edges)
       i <- InstructionParser.parseMany(instructions)
     } yield Mower(c, i, edges)
 

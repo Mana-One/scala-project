@@ -1,11 +1,6 @@
 package fr.esgi.al.progfun.io
 
-import fr.esgi.al.progfun.domain.{Coordinates, Mower}
-import fr.esgi.al.progfun.domain.Limit
-import fr.esgi.al.progfun.domain.Instruction
-import fr.esgi.al.progfun.domain.Advance
-import fr.esgi.al.progfun.domain.RotateLeft
-import fr.esgi.al.progfun.domain.RotateRight
+import fr.esgi.al.progfun.domain._
 
 sealed trait Marshaller {
 	def write(filename: String, data: (Limit, List[Mower])): String
@@ -20,9 +15,17 @@ object CSVOutputMarshaller extends Marshaller {
 		}
 	}
 
-	private def writeCoordinates(coordinates: Coordinates): String = {
-		s"${coordinates.x.toString()};${coordinates.y.toString()};${coordinates.direction.toString()}"
+	private def writeDirection(direction: Direction): String = {
+		direction match {
+			case East 	=> "E"
+			case North 	=> "N"
+			case South 	=> "S"
+			case West 	=> "W"
+		}
 	}
+
+	private def writeCoordinates(coordinates: Coordinates) : String =
+		s"${coordinates.x.toString()};${coordinates.y.toString()};${writeDirection(coordinates.direction)}"
 
   override def write(filename: String, data: (Limit, List[Mower])): String = {
 		data._2.zipWithIndex.map(m => {
@@ -33,11 +36,5 @@ object CSVOutputMarshaller extends Marshaller {
 
 			s"${num.toString()};${writeCoordinates(start)};${writeCoordinates(end)};${instructions.map(writeInstruction)mkString((""))}"
 		}).mkString("\n")
-
-		// val pw = new PrintWriter(new File(filename))
-		// pw.write(res)
-		// pw.close()
-
-		// res
 	}
 }
