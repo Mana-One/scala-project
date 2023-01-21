@@ -104,3 +104,19 @@ object JsonMarshaller extends Marshaller {
 		"tondeuses" -> JsonArray(mowers.map(mower => mowerToJson(1, mower)))
 	)).toJson()
 }
+
+sealed trait MyYaml {
+	def toYaml(): String
+}
+
+case class YamlString(content: String) extends MyYaml {
+	def toYaml(): String = ???
+}
+
+case class YamlArray(content: List[MyYaml]) extends  MyYaml {
+	def toYaml(): String = ???
+}
+
+object YamlMarshaller extends Marshaller {
+	  override def write(limit: Limit, mowers: List[Mower]): String = ???
+}
