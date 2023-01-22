@@ -32,7 +32,7 @@ object CSVMarshaller extends Marshaller {
     number, 
     coordinatesToCsv(mower.start) 
       ++ coordinatesToCsv(mower.run())
-      ++ mower.instructions.map(instructionToCsv)
+      :+ CsvArray(mower.instructions.map(instructionToCsv))
   )
 
   override def write(limit: Limit, mowers: List[Mower]): String = {

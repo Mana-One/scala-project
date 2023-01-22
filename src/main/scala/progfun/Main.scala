@@ -1,9 +1,7 @@
 package fr.esgi.al.progfun
 
-import fr.esgi.al.progfun.io.{AppConfig, InputReader}
-import scala.util.{Failure, Success, Try}
-import java.io.{File, PrintWriter}
-import fr.esgi.al.progfun.domain.DonneesIncorectesException 
+import fr.esgi.al.progfun.io.{AppConfig, InputReader, OutputWriter}
+import scala.util.{Failure, Success}
 
 @SuppressWarnings(Array("org.wartremover.warts.Throw"))
 object Main extends App {
@@ -15,19 +13,7 @@ object Main extends App {
       .map {
         case (limit, mowers) => appConfig.marshaller.write(limit, mowers)
       }
-
-    result <- Try {
-      val outstream = new PrintWriter(new File(appConfig.outputFile))
-      outstream.write(output)
-      outstream.close()
-      println(output)
-    }.recoverWith {
-      case _: Throwable =>
-        Failure(
-          new DonneesIncorectesException("Could not write in output file")
-        )
-    }
-  } yield result
+  } yield OutputWriter.write(appConfig, output)
 
   res match {
     case Failure(exception) => throw exception
