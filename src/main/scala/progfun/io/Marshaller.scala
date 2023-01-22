@@ -8,38 +8,39 @@ sealed trait Marshaller {
 
 // CSV MARSHALLER
 object CSVMarshaller extends Marshaller {
-  private def writeInstruction(instruction: Instruction): String = {
+  private def instructionToCsv(instruction: Instruction): MyCsv = {
     instruction match {
-      case Advance     => "A"
-      case RotateLeft  => "G"
-      case RotateRight => "D"
+      case Advance     => CsvString("A")
+      case RotateLeft  => CsvString("G")
+      case RotateRight => CsvString("D")
     }
   }
 
-  private def writeDirection(direction: Direction): String = {
+  private def directionToCsv(direction: Direction): MyCsv = {
     direction match {
-      case East  => "E"
-      case North => "N"
-      case South => "S"
-      case West  => "W"
+      case East  => CsvString("E")
+      case North => CsvString("N")
+      case South => CsvString("S")
+      case West  => CsvString("W")
     }
   }
 
-  private def writeCoordinates(coordinates: Coordinates): String =
-    s"${coordinates.x.toString()};${coordinates.y.toString()};${writeDirection(coordinates.direction)}"
+  private def coordinatesToCsv(coordinates: Coordinates): List[MyCsv] = 
+    CsvInt(coordinates.x) :: CsvInt(coordinates.y) :: directionToCsv(coordinates.direction) :: Nil
+
+  private def mowerToCsv(number: Int, mower: Mower): CsvRow = CsvRow(
+    number, 
+    coordinatesToCsv(mower.start) 
+      ++ coordinatesToCsv(mower.run())
+      ++ mower.instructions.map(instructionToCsv)
+  )
 
   override def write(limit: Limit, mowers: List[Mower]): String = {
-    mowers.zipWithIndex
-      .map(m => {
-        val num = m._2 + 1
-        val start = m._1.start
-        val instructions = m._1.instructions
-        val end = m._1.run()
-
-        s"${num.toString()};${writeCoordinates(start)};${writeCoordinates(end)};${instructions
-          .map(writeInstruction) mkString ((""))}"
-      })
-      .mkString("\n")
+    CsvDocument(
+      mowers.zipWithIndex.map {
+        case (mower, index) => mowerToCsv(index + 1, mower)
+      }
+    ).toCsv()
   }
 }
 
@@ -52,12 +53,12 @@ object JsonMarshaller extends Marshaller {
     case South => JsonString("S")
   }
 
-  private def coordinatesToJson(indent: Int, coordinates: Coordinates): MyJson =
+  private def coordinatesToJson(indent: String, coordinates: Coordinates): MyJson =
     JsonObject(
       indent,
       Map(
         "point" -> JsonObject(
-          indent + 1,
+          indent + "\t",
           Map(
             "x" -> JsonInt(coordinates.x),
             "y" -> JsonInt(coordinates.y)
@@ -74,17 +75,17 @@ object JsonMarshaller extends Marshaller {
       case RotateRight => JsonString("D")
     }
 
-  private def mowerToJson(indent: Int, mower: Mower): MyJson =
+  private def mowerToJson(indent: String, mower: Mower): MyJson =
     JsonObject(
       indent,
       Map(
-        "début"        -> coordinatesToJson(indent + 1, mower.start),
+        "début"        -> coordinatesToJson(indent + "\t", mower.start),
         "instructions" -> JsonArray(mower.instructions.map(instructionToJson)),
-        "fin"          -> coordinatesToJson(indent + 1, mower.run())
+        "fin"          -> coordinatesToJson(indent + "\t", mower.run())
       )
     )
 
-  private def limitToJson(indent: Int, limit: Limit): MyJson =
+  private def limitToJson(indent: String, limit: Limit): MyJson =
     JsonObject(
       indent,
       Map(
@@ -95,10 +96,10 @@ object JsonMarshaller extends Marshaller {
 
   override def write(limit: Limit, mowers: List[Mower]): String =
     JsonObject(
-      0,
+      "",
       Map(
-        "limite"    -> limitToJson(1, limit),
-        "tondeuses" -> JsonArray(mowers.map(mower => mowerToJson(1, mower)))
+        "limite"    -> limitToJson("\t", limit),
+        "tondeuses" -> JsonArray(mowers.map(mower => mowerToJson("\t", mower)))
       )
     ).toJson()
 }

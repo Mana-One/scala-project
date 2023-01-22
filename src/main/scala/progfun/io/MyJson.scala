@@ -15,17 +15,14 @@ case class JsonArray(content: List[MyJson]) extends MyJson {
       .map(c => c.toJson())
       .mkString("[", ",", "]")
 }
-case class JsonObject(indent: Int, content: Map[String, MyJson])
+case class JsonObject(indent: String, content: Map[String, MyJson])
     extends MyJson {
   def toJson(): String = {
-    val parentIndentation = List.fill(indent)('\t').mkString
-    val childIndentation = List.fill(indent + 1)('\t').mkString
-
     content
       .map {
         case (key, value) =>
-          s"""${childIndentation}"${key}": ${value.toJson()}"""
+          s"""${indent + "\t"}"${key}": ${value.toJson()}"""
       }
-      .mkString("{\n", ",\n", s"\n${parentIndentation}}")
+      .mkString("{\n", ",\n", s"\n${indent}}")
   }
 }
