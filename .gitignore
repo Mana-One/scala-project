@@ -34,7 +34,7 @@ metals.sbt
 /.worksheet/
 
 # APP
-input.txt
-out*.csv
-out*.yaml
-out*.json
+/*.txt
+/*.csv
+/*.yaml
+/*.json
