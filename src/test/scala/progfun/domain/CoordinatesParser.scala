@@ -11,11 +11,15 @@ class CoordinatesParserSpec extends AnyFunSuite {
 
   test("parsing should fail when format is incorrect") {
     val res = CoordinatesParser.parse("R 2 N 56", Limit(10, 10))
-    assert(res.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
+    assert(
+      res.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
   }
 
   test("parsing should fail when out of bounds") {
     val res = CoordinatesParser.parse("6 7 E", Limit(5, 5))
-    assert(res.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
+    assert(
+      res.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
   }
 }

@@ -70,9 +70,11 @@ object AppConfig {
             )
         }
       outputType <- Try(config.getString("application.output-type"))
-        .recoverWith { case _: Throwable =>
+        .recoverWith {
+          case _: Throwable =>
             Failure(new DonneesIncorectesException("Unreachable output type"))
-        }.flatMap(getOutputType)
+        }
+        .flatMap(getOutputType)
 
       outputFile <- getOutputFile(config, outputType)
       marshaller <- getMarshaller(outputType)

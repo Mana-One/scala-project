@@ -25,12 +25,14 @@ object CSVMarshaller extends Marshaller {
     }
   }
 
-  private def coordinatesToCsv(coordinates: Coordinates): List[MyCsv] = 
-    CsvInt(coordinates.x) :: CsvInt(coordinates.y) :: directionToCsv(coordinates.direction) :: Nil
+  private def coordinatesToCsv(coordinates: Coordinates): List[MyCsv] =
+    CsvInt(coordinates.x) :: CsvInt(coordinates.y) :: directionToCsv(
+      coordinates.direction
+    ) :: Nil
 
   private def mowerToCsv(number: Int, mower: Mower): CsvRow = CsvRow(
-    number, 
-    coordinatesToCsv(mower.start) 
+    number,
+    coordinatesToCsv(mower.start)
       ++ coordinatesToCsv(mower.run())
       :+ CsvArray(mower.instructions.map(instructionToCsv))
   )
@@ -53,7 +55,10 @@ object JsonMarshaller extends Marshaller {
     case South => JsonString("S")
   }
 
-  private def coordinatesToJson(indent: String, coordinates: Coordinates): MyJson =
+  private def coordinatesToJson(
+      indent: String,
+      coordinates: Coordinates
+  ): MyJson =
     JsonObject(
       indent,
       Map(
@@ -106,40 +111,69 @@ object JsonMarshaller extends Marshaller {
 
 // YAML MARSHALLER
 object YamlMarshaller extends Marshaller {
-	private def directionToYaml(direction: Direction): MyYaml = direction match {
-		case North => YamlString("N")
-		case East => YamlString("E")
-		case West => YamlString("W")
-		case South => YamlString("S")
-	}
+  private def directionToYaml(direction: Direction): MyYaml = direction match {
+    case North => YamlString("N")
+    case East  => YamlString("E")
+    case West  => YamlString("W")
+    case South => YamlString("S")
+  }
 
-	private def coordinatesToYaml(indent: String, coordinates: Coordinates): MyYaml = YamlObject(indent, Map(
-		"point" -> YamlObject(indent + "  ", Map(
-			"x" -> YamlInt(coordinates.x),
-			"y" -> YamlInt(coordinates.y)
-		)),
-		"direction" -> directionToYaml(coordinates.direction)
-	))
+  private def coordinatesToYaml(
+      indent: String,
+      coordinates: Coordinates
+  ): MyYaml =
+    YamlObject(
+      indent,
+      Map(
+        "point" -> YamlObject(
+          indent + "  ",
+          Map(
+            "x" -> YamlInt(coordinates.x),
+            "y" -> YamlInt(coordinates.y)
+          )
+        ),
+        "direction" -> directionToYaml(coordinates.direction)
+      )
+    )
 
-	private def instructionToYaml(instruction: Instruction): MyYaml = instruction match {
-		case Advance => YamlString("A")
-		case RotateLeft => YamlString("G")
-		case RotateRight => YamlString("D")
-	}
+  private def instructionToYaml(instruction: Instruction): MyYaml =
+    instruction match {
+      case Advance     => YamlString("A")
+      case RotateLeft  => YamlString("G")
+      case RotateRight => YamlString("D")
+    }
 
-	private def mowerToYaml(indent: String, mower: Mower): MyYaml = YamlObject(indent, Map(
-		"debut" -> coordinatesToYaml(indent + "  ", mower.start),
-		"instructions" -> YamlArray(indent + "  ", mower.instructions.map(instructionToYaml)),
-		"fin" -> coordinatesToYaml(indent + "  ", mower.run())
-	))
+  private def mowerToYaml(indent: String, mower: Mower): MyYaml =
+    YamlObject(
+      indent,
+      Map(
+        "debut" -> coordinatesToYaml(indent + "  ", mower.start),
+        "instructions" -> YamlArray(
+          indent + "  ",
+          mower.instructions.map(instructionToYaml)
+        ),
+        "fin" -> coordinatesToYaml(indent + "  ", mower.run())
+      )
+    )
 
-	private def limitToYaml(indent: String, limit: Limit): MyYaml = YamlObject(indent, Map(
-			"x"-> YamlInt(limit.x),
-			"y" -> YamlInt(limit.y)
-		))
+  private def limitToYaml(indent: String, limit: Limit): MyYaml =
+    YamlObject(
+      indent,
+      Map(
+        "x" -> YamlInt(limit.x),
+        "y" -> YamlInt(limit.y)
+      )
+    )
 
-  override def write(limit: Limit, mowers: List[Mower]): String = YamlObject("", Map(
-		"limit" -> limitToYaml("  ", limit),
-		"tondeuses" -> YamlArray("  ", mowers.map(mower => mowerToYaml("  ", mower)))
-	)).toYaml("", false)
+  override def write(limit: Limit, mowers: List[Mower]): String =
+    YamlObject(
+      "",
+      Map(
+        "limit" -> limitToYaml("  ", limit),
+        "tondeuses" -> YamlArray(
+          "  ",
+          mowers.map(mower => mowerToYaml("  ", mower))
+        )
+      )
+    ).toYaml("", false)
 }

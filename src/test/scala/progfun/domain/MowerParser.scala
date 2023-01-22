@@ -10,10 +10,14 @@ class MowerParserSpec extends AnyFunSuite {
     val mowers = MowerParser.parseMany(input, limit)
 
     assert(mowers.success.value.isInstanceOf[List[Mower]] == true)
-    assert(mowers.success.value.equals(List(
-      Mower(Coordinates(1, 2, North), List(RotateLeft, Advance), limit),
-      Mower(Coordinates(3, 3, East), List(Advance, RotateRight), limit)
-    )) == true)
+    assert(
+      mowers.success.value.equals(
+        List(
+          Mower(Coordinates(1, 2, North), List(RotateLeft, Advance), limit),
+          Mower(Coordinates(3, 3, East), List(Advance, RotateRight), limit)
+        )
+      ) == true
+    )
   }
 
   test("parsing should fail when format is invalid") {
@@ -21,6 +25,8 @@ class MowerParserSpec extends AnyFunSuite {
     val limit = Limit(10, 10)
     val res = MowerParser.parseMany(input, limit)
 
-    assert(res.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
+    assert(
+      res.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
   }
 }

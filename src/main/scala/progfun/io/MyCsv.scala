@@ -1,6 +1,5 @@
 package fr.esgi.al.progfun.io
 
-
 sealed trait MyCsv {
   def toCsv(): String
 }
@@ -14,8 +13,10 @@ case class CsvArray(content: List[MyCsv]) extends MyCsv {
   def toCsv(): String = content.map(c => c.toCsv()).mkString
 }
 case class CsvRow(number: Int, content: List[MyCsv]) extends MyCsv {
-  def toCsv(): String = (CsvInt(number) +: content )
-    .map(c => c.toCsv()).mkString(";")
+  def toCsv(): String =
+    (CsvInt(number) +: content)
+      .map(c => c.toCsv())
+      .mkString(";")
 }
 case class CsvDocument(content: List[CsvRow]) extends MyCsv {
   def toCsv(): String = content.map(c => c.toCsv()).mkString("\n")

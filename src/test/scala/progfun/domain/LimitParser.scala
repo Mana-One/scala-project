@@ -12,12 +12,16 @@ class LimitParserSpec extends AnyFunSuite {
 
   test("parsing should fail when passing negative values") {
     val res = LimitParser.parse("-10 5")
-    assert(res.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
+    assert(
+      res.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
   }
 
   test("parsing should fail when not passing Ints") {
     val res = LimitParser.parse("10 aaa")
-    assert(res.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
+    assert(
+      res.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
   }
 
   test("parsing should fail when not passing exactly two Ints") {
@@ -25,8 +29,14 @@ class LimitParserSpec extends AnyFunSuite {
     val res2 = LimitParser.parse("1 ")
     val res3 = LimitParser.parse("1 2 3")
 
-    assert(res.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
-    assert(res2.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
-    assert(res3.failure.exception.isInstanceOf[DonneesIncorectesException] == true)
+    assert(
+      res.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
+    assert(
+      res2.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
+    assert(
+      res3.failure.exception.isInstanceOf[DonneesIncorectesException] == true
+    )
   }
 }
