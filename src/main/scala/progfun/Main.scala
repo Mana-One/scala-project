@@ -1,8 +1,9 @@
 package fr.esgi.al.progfun
 
-import fr.esgi.al.progfun.io._
-import scala.util.{Failure, Success}
+import fr.esgi.al.progfun.io.{AppConfig, InputReader}
+import scala.util.{Failure, Success, Try}
 import java.io.{File, PrintWriter}
+<<<<<<< HEAD
 import com.typesafe.config.{Config, ConfigFactory}
 import scala.util.Try
 
@@ -29,44 +30,36 @@ object AppConfigProps  {
     case _ => Failure(new Exception("Invalid output type"))
   }
 }
+=======
+import fr.esgi.al.progfun.domain.DonneesIncorectesException 
+>>>>>>> 37e018088c7f15b4ce4bce89052174a4c329610d
 
 @SuppressWarnings(Array("org.wartremover.warts.Throw"))
 object Main extends App {
+  val res = for {
+    appConfig <- { AppConfig.build() }
 
-  val outputType = AppConfigProps.getOutputType match {
-    case Failure(exception) => throw exception
-    case Success(outputType) => outputType
-  }
-
-  val inputFile = AppConfigProps.getInputFile match {
-    case Failure(exception) => throw exception
-    case Success(inputFile) => inputFile
-  }
-
-  val config: AppConfig = AppConfig(outputType ,inputFile)
-  
-  AppConfigProps.getMarshaller(config.outputType) match {
-    case Failure(exception) => throw exception
-    case Success(marshaller) => {
-      val res = InputReader
-        .parseTasks(config.inputFile)
-        .map { case (limit, mowers) => marshaller.write(limit, mowers) }
-
-      res match {
-        case Failure(exception) => throw exception
-        case Success(s) => {
-          AppConfigProps.getFileName(config.outputType) match {
-            case Failure(exception) => throw exception
-            case Success(fileName) => {
-              val outstream = new PrintWriter(new File(fileName))
-              outstream.write(s)
-              outstream.close()
-              println(s)
-            }
-          }
-        }
+    output <- InputReader
+      .parseTasks(appConfig.inputFile)
+      .map {
+        case (limit, mowers) => appConfig.marshaller.write(limit, mowers)
       }
-    }
-  }
 
+    result <- Try {
+      val outstream = new PrintWriter(new File(appConfig.outputFile))
+      outstream.write(output)
+      outstream.close()
+      println(output)
+    }.recoverWith {
+      case _: Throwable =>
+        Failure(
+          new DonneesIncorectesException("Could not write in output file")
+        )
+    }
+  } yield result
+
+  res match {
+    case Failure(exception) => throw exception
+    case Success(_)         => ()
+  }
 }

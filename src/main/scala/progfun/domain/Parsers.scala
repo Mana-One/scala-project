@@ -3,16 +3,19 @@ package fr.esgi.al.progfun.domain
 import scala.util.{Failure, Success, Try}
 
 object IntParser {
-  def parse (v: String): Try[Int] = Try(v.toInt)
-    .recoverWith {
-      case _: Throwable => Failure(new DonneesIncorectesException("Invalid integer value"))
-    }
+  def parse(v: String): Try[Int] =
+    Try(v.toInt)
+      .recoverWith {
+        case _: Throwable =>
+          Failure(new DonneesIncorectesException("Invalid integer value"))
+      }
 }
 
 object LimitParser {
   private def checkAxis(axis: Int): Try[Int] = {
-    if (axis <= 0) Failure(new DonneesIncorectesException("Zero or negative limit value."))
-    else           Success(axis)
+    if (axis <= 0)
+      Failure(new DonneesIncorectesException("Zero or negative limit value."))
+    else Success(axis)
   }
 
   def parse(v: String): Try[Limit] = v.split(" ").toList match {
@@ -33,15 +36,16 @@ object InstructionParser {
     case _   => Failure(new DonneesIncorectesException("Invalid instruction"))
   }
 
-  def parseMany(inputs: String): Try[List[Instruction]] = inputs.toList
-    .map(input => parse(input)) // List[Try[Instruction]]
-    .foldLeft[Try[List[Instruction]]](Success(Nil)) { (acc, input) =>
-      (acc, input) match {
-        case (Failure(e), _)            => Failure(e)
-        case (_, Failure(e))            => Failure(e)
-        case (Success(arr), Success(i)) => Success(arr :+ i)
+  def parseMany(inputs: String): Try[List[Instruction]] =
+    inputs.toList
+      .map(input => parse(input)) // List[Try[Instruction]]
+      .foldLeft[Try[List[Instruction]]](Success(Nil)) { (acc, input) =>
+        (acc, input) match {
+          case (Failure(e), _)            => Failure(e)
+          case (_, Failure(e))            => Failure(e)
+          case (Success(arr), Success(i)) => Success(arr :+ i)
+        }
       }
-    }
 }
 
 object DirectionParser {
@@ -56,7 +60,7 @@ object DirectionParser {
 
 object CoordinatesParser {
   private def checkCoordinate(coordinate: Int, axisLimit: Int): Try[Int] = {
-    if (coordinate < 0 || axisLimit < coordinate) 
+    if (coordinate < 0 || axisLimit < coordinate)
       Failure(new DonneesIncorectesException("Out of lawn boubds."))
     else
       Success(coordinate)
@@ -75,22 +79,28 @@ object CoordinatesParser {
 }
 
 object MowerParser {
-  private def parse(coordinates: String, instructions: String, limit: Limit): Try[Mower] = for {
-    c <- CoordinatesParser.parse(coordinates, limit)
-    i <- InstructionParser.parseMany(instructions)
-  } yield Mower(c, i, limit)
+  private def parse(
+      coordinates: String,
+      instructions: String,
+      limit: Limit
+  ): Try[Mower] =
+    for {
+      c <- CoordinatesParser.parse(coordinates, limit)
+      i <- InstructionParser.parseMany(instructions)
+    } yield Mower(c, i, limit)
 
-  def parseMany(inputs: List[String], limit: Limit): Try[List[Mower]] = inputs match {
-    case _ :: Nil => 
-      Failure(new DonneesIncorectesException("Invalid mowers input"))
+  def parseMany(inputs: List[String], limit: Limit): Try[List[Mower]] =
+    inputs match {
+      case _ :: Nil =>
+        Failure(new DonneesIncorectesException("Invalid mowers input"))
 
-    case coordinates :: instructions :: next =>
-      for {
-        mower <- parse(coordinates, instructions, limit)
-        rest  <- parseMany(next, limit)
-      } yield mower :: rest
-      
-    case Nil => 
-      Success(Nil)
-  }
+      case coordinates :: instructions :: next =>
+        for {
+          mower <- parse(coordinates, instructions, limit)
+          rest  <- parseMany(next, limit)
+        } yield mower :: rest
+
+      case Nil =>
+        Success(Nil)
+    }
 }
