@@ -44,36 +44,6 @@ object CSVMarshaller extends Marshaller {
 }
 
 // JSON MARSHALLER
-sealed trait MyJson {
-  def toJson(): String
-}
-case class JsonInt(content: Int) extends MyJson {
-  def toJson(): String = content.toString()
-}
-case class JsonString(content: String) extends MyJson {
-  def toJson(): String = s""""$content""""
-}
-case class JsonArray(content: List[MyJson]) extends MyJson {
-  def toJson(): String =
-    content
-      .map(c => c.toJson())
-      .mkString("[", ",", "]")
-}
-case class JsonObject(indent: Int, content: Map[String, MyJson])
-    extends MyJson {
-  def toJson(): String = {
-    val parentIndentation = List.fill(indent)('\t').mkString
-    val childIndentation = List.fill(indent + 1)('\t').mkString
-
-    content
-      .map {
-        case (key, value) =>
-          s"""${childIndentation}"${key}": ${value.toJson()}"""
-      }
-      .mkString("{\n", ",\n", s"\n${parentIndentation}}")
-  }
-}
-
 object JsonMarshaller extends Marshaller {
   private def directionToJson(direction: Direction): MyJson = direction match {
     case North => JsonString("N")
@@ -133,37 +103,7 @@ object JsonMarshaller extends Marshaller {
     ).toJson()
 }
 
-sealed trait MyYaml {
-  def toYaml(): String
-}
-
-case class YamlInt(content: Int) extends MyYaml {
-	def toYaml(): String = content.toString()
-}
-
-case class YamlString(content: String) extends MyYaml {
-<<<<<<< HEAD
-	def toYaml(): String =  s"$content"
-}
-
-case class YamlArray(indent: Int, content: List[MyYaml]) extends  MyYaml {
-	def toYaml(): String =  {
-		val childIndentation = List.fill(indent)(" ").mkString
-			content
-			.map( c => s"${childIndentation}- ${c.toYaml()}" )
-			.mkString("\n","\n","")
-	}
-}
-
-case class YamlObject(indent: Int, content: Map[String, MyYaml]) extends MyYaml {
-	def toYaml(): String = {
-		val parentIndentation = List.fill(indent)(' ').mkString
-		content
-			.map { case (key, value) => s"${parentIndentation}${key}: ${value.toYaml()}" }
-			.mkString("", "\n", "")
-	}
-}
-
+// YAML MARSHALLER
 object YamlMarshaller extends Marshaller {
 	private def directionToYaml(direction: Direction): MyYaml = direction match {
 		case North => YamlString("N")
@@ -172,8 +112,8 @@ object YamlMarshaller extends Marshaller {
 		case South => YamlString("S")
 	}
 
-	private def coordinatesToYaml(indent: Int, coordinates: Coordinates): MyYaml = YamlObject(indent, Map(
-		"point" -> YamlObject(indent + 2, Map(
+	private def coordinatesToYaml(indent: String, coordinates: Coordinates): MyYaml = YamlObject(indent, Map(
+		"point" -> YamlObject(indent + "  ", Map(
 			"x" -> YamlInt(coordinates.x),
 			"y" -> YamlInt(coordinates.y)
 		)),
@@ -186,31 +126,19 @@ object YamlMarshaller extends Marshaller {
 		case RotateRight => YamlString("D")
 	}
 
-	private def mowerToYaml(indent: Int, mower: Mower): MyYaml = YamlObject(indent, Map(
-		"debut" -> coordinatesToYaml(indent + 2, mower.start),
-		"instructions" -> YamlArray(indent + 2, mower.instructions.map(instructionToYaml)),
-		"fin" -> coordinatesToYaml(indent + 2, mower.run())
+	private def mowerToYaml(indent: String, mower: Mower): MyYaml = YamlObject(indent, Map(
+		"debut" -> coordinatesToYaml(indent + "  ", mower.start),
+		"instructions" -> YamlArray(indent + "  ", mower.instructions.map(instructionToYaml)),
+		"fin" -> coordinatesToYaml(indent + "  ", mower.run())
 	))
 
-	private def limitToYaml(indent: Int, limit: Limit): MyYaml = YamlObject(indent, Map(
+	private def limitToYaml(indent: String, limit: Limit): MyYaml = YamlObject(indent, Map(
 			"x"-> YamlInt(limit.x),
 			"y" -> YamlInt(limit.y)
 		))
 
-  override def write(limit: Limit, mowers: List[Mower]): String = YamlObject(0, Map(
-		"limit" -> limitToYaml(2, limit),
-		"tondeuses" -> YamlArray(0, mowers.map(mower => mowerToYaml(2, mower)))
-	)).toYaml()
+  override def write(limit: Limit, mowers: List[Mower]): String = YamlObject("", Map(
+		"limit" -> limitToYaml("  ", limit),
+		"tondeuses" -> YamlArray("  ", mowers.map(mower => mowerToYaml("  ", mower)))
+	)).toYaml("", false)
 }
-=======
-  def toYaml(): String = ???
-}
-
-case class YamlArray(content: List[MyYaml]) extends MyYaml {
-  def toYaml(): String = ???
-}
-
-object YamlMarshaller extends Marshaller {
-  override def write(limit: Limit, mowers: List[Mower]): String = ???
-}
->>>>>>> 37e018088c7f15b4ce4bce89052174a4c329610d
