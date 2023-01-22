@@ -9,17 +9,11 @@ import scala.util.Try
 case class AppConfig(outputType: String, inputFile: String) 
 
 object AppConfigProps  {
-   val conf: Config = ConfigFactory.load()
+  val conf: Config = ConfigFactory.load()
 
-  def getOutputType: Try[String] = Try(conf.getString("application.output-type")) match {
-    case Success(outputType) => Success(outputType)
-    case _ => Failure(new Exception("Invalid output type"))
-  }
+  def getOutputType: Try[String] = Try(conf.getString("application.output-type")) 
 
-  def getInputFile: Try[String] = Try(conf.getString("application.input-file")) match {
-    case Success(inputFile) => Success(inputFile)
-    case _ => Failure(new Exception("Invalid input file"))
-  }
+  def getInputFile: Try[String] = Try(conf.getString("application.input-file")) 
 
   def getMarshaller(outputType: String): Try[Marshaller] = outputType match {
     case "json" => Success(JsonMarshaller)

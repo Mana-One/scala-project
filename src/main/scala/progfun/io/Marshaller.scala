@@ -109,14 +109,67 @@ sealed trait MyYaml {
 	def toYaml(): String
 }
 
-case class YamlString(content: String) extends MyYaml {
-	def toYaml(): String = ???
+case class YamlInt(content: Int) extends MyYaml {
+	def toYaml(): String = content.toString()
 }
 
-case class YamlArray(content: List[MyYaml]) extends  MyYaml {
-	def toYaml(): String = ???
+case class YamlString(content: String) extends MyYaml {
+	def toYaml(): String =  s"$content"
+}
+
+case class YamlArray(indent: Int, content: List[MyYaml]) extends  MyYaml {
+	def toYaml(): String =  {
+		val childIndentation = List.fill(indent)(" ").mkString
+			content
+			.map( c => s"${childIndentation}- ${c.toYaml()}" )
+			.mkString("\n","\n","")
+	}
+}
+
+case class YamlObject(indent: Int, content: Map[String, MyYaml]) extends MyYaml {
+	def toYaml(): String = {
+		val parentIndentation = List.fill(indent)(' ').mkString
+		content
+			.map { case (key, value) => s"${parentIndentation}${key}: ${value.toYaml()}" }
+			.mkString("", "\n", "")
+	}
 }
 
 object YamlMarshaller extends Marshaller {
-	  override def write(limit: Limit, mowers: List[Mower]): String = ???
+	private def directionToYaml(direction: Direction): MyYaml = direction match {
+		case North => YamlString("N")
+		case East => YamlString("E")
+		case West => YamlString("W")
+		case South => YamlString("S")
+	}
+
+	private def coordinatesToYaml(indent: Int, coordinates: Coordinates): MyYaml = YamlObject(indent, Map(
+		"point" -> YamlObject(indent + 2, Map(
+			"x" -> YamlInt(coordinates.x),
+			"y" -> YamlInt(coordinates.y)
+		)),
+		"direction" -> directionToYaml(coordinates.direction)
+	))
+
+	private def instructionToYaml(instruction: Instruction): MyYaml = instruction match {
+		case Advance => YamlString("A")
+		case RotateLeft => YamlString("G")
+		case RotateRight => YamlString("D")
+	}
+
+	private def mowerToYaml(indent: Int, mower: Mower): MyYaml = YamlObject(indent, Map(
+		"debut" -> coordinatesToYaml(indent + 2, mower.start),
+		"instructions" -> YamlArray(indent + 2, mower.instructions.map(instructionToYaml)),
+		"fin" -> coordinatesToYaml(indent + 2, mower.run())
+	))
+
+	private def limitToYaml(indent: Int, limit: Limit): MyYaml = YamlObject(indent, Map(
+			"x"-> YamlInt(limit.x),
+			"y" -> YamlInt(limit.y)
+		))
+
+  override def write(limit: Limit, mowers: List[Mower]): String = YamlObject(0, Map(
+		"limit" -> limitToYaml(2, limit),
+		"tondeuses" -> YamlArray(0, mowers.map(mower => mowerToYaml(2, mower)))
+	)).toYaml()
 }
