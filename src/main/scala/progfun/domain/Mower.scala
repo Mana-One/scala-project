@@ -1,14 +1,11 @@
 package fr.esgi.al.progfun.domain
 
-
 final case class Limit(x: Int, y: Int)
-
 
 sealed trait Instruction
 object Advance extends Instruction
 object RotateLeft extends Instruction
 object RotateRight extends Instruction
-
 
 sealed trait Direction {
   def rotateToTheLeft(): Direction = this match {
@@ -25,11 +22,10 @@ sealed trait Direction {
     case South => West
   }
 }
-object North  extends Direction
-object East   extends Direction
-object West   extends Direction
-object South  extends Direction
-
+object North extends Direction
+object East extends Direction
+object West extends Direction
+object South extends Direction
 
 final case class Coordinates(x: Int, y: Int, direction: Direction) {
   private def moveForward(edges: Limit): Coordinates = this match {
@@ -44,15 +40,22 @@ final case class Coordinates(x: Int, y: Int, direction: Direction) {
     case _ => this
   }
 
-  def applyInstruction(instruction: Instruction, limit: Limit): Coordinates = (this, instruction) match {
-    case (Coordinates(x, y, d), RotateLeft)   => Coordinates(x, y, d.rotateToTheLeft())
-    case (Coordinates(x, y, d), RotateRight)  => Coordinates(x, y, d.rotateToTheRight())
-    case (_, Advance)                         => this.moveForward(limit)
-  }
+  def applyInstruction(instruction: Instruction, limit: Limit): Coordinates =
+    (this, instruction) match {
+      case (Coordinates(x, y, d), RotateLeft) =>
+        Coordinates(x, y, d.rotateToTheLeft())
+      case (Coordinates(x, y, d), RotateRight) =>
+        Coordinates(x, y, d.rotateToTheRight())
+      case (_, Advance) => this.moveForward(limit)
+    }
 }
 
-final case class Mower(start: Coordinates, instructions: List[Instruction], limit: Limit) {
-  def run(): Coordinates = instructions.foldLeft(start) { 
-    (dest, instruction) => dest.applyInstruction(instruction, limit)
+final case class Mower(
+    start: Coordinates,
+    instructions: List[Instruction],
+    limit: Limit
+) {
+  def run(): Coordinates = instructions.foldLeft(start) { (dest, instruction) =>
+    dest.applyInstruction(instruction, limit)
   }
 }
