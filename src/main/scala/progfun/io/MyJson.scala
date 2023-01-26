@@ -1,28 +1,56 @@
 package fr.esgi.al.progfun.io
 
-sealed trait MyJson {
-  def toJson(): String
+sealed case class JsonIndentor(count: Int) {
+  def incrementBy(inc: Int): JsonIndentor = this.copy(count + inc)
+
+  override def toString(): String = count match {
+    case c if (0 < c) => List.fill(count)("\t").mkString
+    case _            => ""
+  }
 }
+object ZeroJsonIndentor extends JsonIndentor(0)
+
+sealed trait MyJson {
+  def toJson(indent: JsonIndentor): String
+}
+
 case class JsonInt(content: Int) extends MyJson {
-  def toJson(): String = content.toString()
+  def toJson(indent: JsonIndentor): String =
+    s"${indent.toString()}${content.toString()}"
 }
 case class JsonString(content: String) extends MyJson {
-  def toJson(): String = s""""$content""""
+  def toJson(indent: JsonIndentor): String =
+    s"""${indent.toString()}"$content""""
 }
 case class JsonArray(content: List[MyJson]) extends MyJson {
-  def toJson(): String =
+  override def toJson(indent: JsonIndentor): String =
     content
-      .map(c => c.toJson())
+      .map {
+        case c @ (_: JsonInt | _: JsonString | _: JsonArray) =>
+          c.toJson(ZeroJsonIndentor)
+        case c: JsonObject => c.toJson(indent.incrementBy(1))
+      }
       .mkString("[", ",", "]")
 }
-case class JsonObject(indent: String, content: Map[String, MyJson])
-    extends MyJson {
-  def toJson(): String = {
+case class JsonObject(content: Map[String, MyJson]) extends MyJson {
+  def toJson(indent: JsonIndentor): String = {
     content
       .map {
         case (key, value) =>
-          s"""${indent + "\t"}"${key}": ${value.toJson()}"""
+          value match {
+            case v @ (_: JsonInt | _: JsonString | _: JsonArray) =>
+              s"""${indent.incrementBy(1).toString()}"${key}": ${v.toJson(
+                ZeroJsonIndentor
+              )}"""
+
+            case v: JsonObject => {
+              val newIndent = indent.incrementBy(1)
+              s"""${newIndent.toString()}"${key}": ${v.toJson(
+                newIndent
+              )}"""
+            }
+          }
       }
-      .mkString("{\n", ",\n", s"\n${indent}}")
+      .mkString("{\n", ",\n", s"\n${indent.toString()}}")
   }
 }

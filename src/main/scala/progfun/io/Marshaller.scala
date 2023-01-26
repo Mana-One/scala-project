@@ -56,14 +56,11 @@ object JsonMarshaller extends Marshaller {
   }
 
   private def coordinatesToJson(
-      indent: String,
       coordinates: Coordinates
   ): MyJson =
     JsonObject(
-      indent,
       Map(
         "point" -> JsonObject(
-          indent + "\t",
           Map(
             "x" -> JsonInt(coordinates.x),
             "y" -> JsonInt(coordinates.y)
@@ -80,19 +77,17 @@ object JsonMarshaller extends Marshaller {
       case RotateRight => JsonString("D")
     }
 
-  private def mowerToJson(indent: String, mower: Mower): MyJson =
+  private def mowerToJson(mower: Mower): MyJson =
     JsonObject(
-      indent,
       Map(
-        "début"        -> coordinatesToJson(indent + "\t", mower.start),
+        "début"        -> coordinatesToJson(mower.start),
         "instructions" -> JsonArray(mower.instructions.map(instructionToJson)),
-        "fin"          -> coordinatesToJson(indent + "\t", mower.run())
+        "fin"          -> coordinatesToJson(mower.run())
       )
     )
 
-  private def limitToJson(indent: String, limit: Limit): MyJson =
+  private def limitToJson(limit: Limit): MyJson =
     JsonObject(
-      indent,
       Map(
         "x" -> JsonInt(limit.x),
         "y" -> JsonInt(limit.y)
@@ -101,12 +96,11 @@ object JsonMarshaller extends Marshaller {
 
   override def write(limit: Limit, mowers: List[Mower]): String =
     JsonObject(
-      "",
       Map(
-        "limite"    -> limitToJson("\t", limit),
-        "tondeuses" -> JsonArray(mowers.map(mower => mowerToJson("\t", mower)))
+        "limite"    -> limitToJson(limit),
+        "tondeuses" -> JsonArray(mowers.map(mower => mowerToJson(mower)))
       )
-    ).toJson()
+    ).toJson(ZeroJsonIndentor)
 }
 
 // YAML MARSHALLER
