@@ -113,14 +113,11 @@ object YamlMarshaller extends Marshaller {
   }
 
   private def coordinatesToYaml(
-      indent: String,
       coordinates: Coordinates
   ): MyYaml =
     YamlObject(
-      indent,
       Map(
         "point" -> YamlObject(
-          indent + "  ",
           Map(
             "x" -> YamlInt(coordinates.x),
             "y" -> YamlInt(coordinates.y)
@@ -137,22 +134,19 @@ object YamlMarshaller extends Marshaller {
       case RotateRight => YamlString("D")
     }
 
-  private def mowerToYaml(indent: String, mower: Mower): MyYaml =
+  private def mowerToYaml(mower: Mower): MyYaml =
     YamlObject(
-      indent,
       Map(
-        "debut" -> coordinatesToYaml(indent + "  ", mower.start),
+        "debut" -> coordinatesToYaml(mower.start),
         "instructions" -> YamlArray(
-          indent + "  ",
           mower.instructions.map(instructionToYaml)
         ),
-        "fin" -> coordinatesToYaml(indent + "  ", mower.run())
+        "fin" -> coordinatesToYaml(mower.run())
       )
     )
 
-  private def limitToYaml(indent: String, limit: Limit): MyYaml =
+  private def limitToYaml(limit: Limit): MyYaml =
     YamlObject(
-      indent,
       Map(
         "x" -> YamlInt(limit.x),
         "y" -> YamlInt(limit.y)
@@ -161,13 +155,11 @@ object YamlMarshaller extends Marshaller {
 
   override def write(limit: Limit, mowers: List[Mower]): String =
     YamlObject(
-      "",
       Map(
-        "limit" -> limitToYaml("  ", limit),
+        "limit" -> limitToYaml(limit),
         "tondeuses" -> YamlArray(
-          "  ",
-          mowers.map(mower => mowerToYaml("  ", mower))
+          mowers.map(mower => mowerToYaml(mower))
         )
       )
-    ).toYaml("", false)
+    ).toYaml(ZeroYamlIndentator, false)
 }

@@ -26,8 +26,9 @@ case class JsonArray(content: List[MyJson]) extends MyJson {
   override def toJson(indent: JsonIndentor): String =
     content
       .map {
-        case c @ (_: JsonInt | _: JsonString | _: JsonArray) =>
-          c.toJson(ZeroJsonIndentor)
+        case c: JsonInt    => c.toJson(ZeroJsonIndentor)
+        case c: JsonString => c.toJson(ZeroJsonIndentor)
+        case c: JsonArray  => c.toJson(ZeroJsonIndentor)
         case c: JsonObject => c.toJson(indent.incrementBy(1))
       }
       .mkString("[", ",", "]")
